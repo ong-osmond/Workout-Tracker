@@ -1,5 +1,7 @@
 const express = require("express");
+const path = require("path");
 const logger = require("morgan");
+const mongojs = require("mongojs");
 const mongoose = require("mongoose");
 
 const PORT = process.env.PORT || 3000;
@@ -15,40 +17,73 @@ app.use(express.json());
 
 app.use(express.static("public"));
 
-mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/populate", { useNewUrlParser: true });
-
-// Create the MongoDB Workout DB
-db.Workout.create({ name: "Workout Tracker" })
-    .then(dbWorkout => {
-        console.log(dbWorkout);
-    })
-    .catch(({ message }) => {
-        console.log(message);
-    });
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/workout", { useNewUrlParser: true });
 
 
-// Add an Exercise
-app.post("/submit", ({ body }, res) => {
-    db.Book.create(body)
-        .then(({ _id }) => db.Library.findOneAndUpdate({}, { $push: { books: _id } }, { new: true }))
-        .then(dbLibrary => {
-            res.json(dbLibrary);
+// Route to new Exercise page
+app.get("/exercise", (req, res) => {
+    res.sendFile(path.join(__dirname, "./public/exercise.html"))
+})
+
+// Route to new Dashboard page
+app.get("/stats", (req, res) => {
+    res.sendFile(path.join(__dirname, "./public/stats.html"))
+})
+
+// View exercises
+app.get("/api/workouts", (req, res) => {
+    db.Workout.find({})
+        .populate("exercises")
+        .then(dbWorkouts => {
+            res.json(dbWorkouts);
         })
         .catch(err => {
             res.json(err);
         });
 });
 
-// Populated endpoint
-app.get("/populated", (req, res) => {
+// View all workouts
+app.get("/api/workouts/range", (req, res) => {
     db.Workout.find({})
-        .populate("exercises")
-        .then(dbWorkout => {
-            res.json(dbWorkout);
+        .then(dbWorkouts => {
+            res.json(dbWorkouts)
+        }).catch(err => {
+            res.json(err)
         })
-        .catch(err => {
+})
+
+
+// Create new workout
+app.post("/api/workouts", ({ body }, res) => {
+    db.Workout.create(body)
+        .then(dbWorkouts => {
+            res.json(dbWorkouts)
+        }).catch(err => {
             res.json(err);
         });
+});
+
+
+// Add new exercise to workout
+app.put("/api/workouts/:id", ({ params, body }, res) => {
+    db.Workout.updateOne({ "_id": mongojs.ObjectId(params.id) }, {
+            $push: {
+                "exercises": {
+                    "type": body.type,
+                    "name": body.name,
+                    "duration": body.duration,
+                    "distance": body.distance,
+                    "weight": body.weight,
+                    "sets": body.sets,
+                    "reps": body.reps
+                }
+            }
+        })
+        .then(dbWorkouts => {
+            res.json(dbWorkouts)
+        }).catch(err => {
+            res.json(err)
+        })
 });
 
 app.listen(PORT, () => {
