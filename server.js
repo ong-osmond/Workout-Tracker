@@ -1,3 +1,5 @@
+/*jshint esversion: 6 */
+
 const express = require("express");
 const path = require("path");
 const logger = require("morgan");
@@ -24,16 +26,15 @@ mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/workout", {
     useFindAndModify: false
 });
 
-
 // Route to new Exercise page
 app.get("/exercise", (req, res) => {
-    res.sendFile(path.join(__dirname, "./public/exercise.html"))
-})
+    res.sendFile(path.join(__dirname, "./public/exercise.html"));
+});
 
 // Route to new Dashboard page
 app.get("/stats", (req, res) => {
-    res.sendFile(path.join(__dirname, "./public/stats.html"))
-})
+    res.sendFile(path.join(__dirname, "./public/stats.html"));
+});
 
 // View exercises
 app.get("/api/workouts", (req, res) => {
@@ -51,23 +52,21 @@ app.get("/api/workouts", (req, res) => {
 app.get("/api/workouts/range", (req, res) => {
     db.Workout.find({})
         .then(dbWorkouts => {
-            res.json(dbWorkouts)
-        }).catch(err => {
-            res.json(err)
-        })
-})
-
-
-// Create new workout
-app.post("/api/workouts", ({ body }, res) => {
-    db.Workout.create(body)
-        .then(dbWorkouts => {
-            res.json(dbWorkouts)
+            res.json(dbWorkouts);
         }).catch(err => {
             res.json(err);
         });
 });
 
+// Create new workout
+app.post("/api/workouts", ({ body }, res) => {
+    db.Workout.create(body)
+        .then(dbWorkouts => {
+            res.json(dbWorkouts);
+        }).catch(err => {
+            res.json(err);
+        });
+});
 
 // Add new exercise to workout
 app.put("/api/workouts/:id", ({ params, body }, res) => {
@@ -85,10 +84,10 @@ app.put("/api/workouts/:id", ({ params, body }, res) => {
             }
         })
         .then(dbWorkouts => {
-            res.json(dbWorkouts)
+            res.json(dbWorkouts);
         }).catch(err => {
-            res.json(err)
-        })
+            res.json(err);
+        });
 });
 
 app.listen(PORT, () => {
